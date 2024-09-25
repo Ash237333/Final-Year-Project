@@ -8,6 +8,7 @@ from tokenizers.trainers import BpeTrainer
 
 GERMAN_FILEPATH = "German_text.txt"
 ENGLISH_FILEPATH = "English_text.txt"
+VOCAB_SIZE = 30000
 
 if not (os.path.exists(GERMAN_FILEPATH) and os.path.exists(ENGLISH_FILEPATH)):
     ds = load_dataset("wmt/wmt14", "de-en", split="test")
@@ -24,6 +25,6 @@ if not (os.path.exists(GERMAN_FILEPATH) and os.path.exists(ENGLISH_FILEPATH)):
             german_file.write(gtext + " ")
 
 BPE_tokenizer = Tokenizer(BPE())
-BPE_trainer = BpeTrainer(vocab_size=30000, show_progress=True)
+BPE_trainer = BpeTrainer(vocab_size=VOCAB_SIZE, show_progress=True)
 BPE_tokenizer.train([ENGLISH_FILEPATH],BPE_trainer)
 BPE_tokenizer.save("BPE_Tokenizer.json")

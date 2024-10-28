@@ -25,13 +25,16 @@ class Transformer(nn.Module):
         :return: The outputted tensor
         """
 
+        #Turns int labels into vector embeddings with pos info
         embedded_vectors = self.embed(x)
         embedded_vectors = Layers.positional_encoder(embedded_vectors)
         encoder_output = embedded_vectors
 
+        #Encoder stack
         for layer in self.encoder_layer_stack:
             encoder_output = layer(encoder_output)
 
+        #Decoder Stack
         for layer in self.decoder_layer_stack:
             encoder_output = layer(embedded_vectors, encoder_output)
 

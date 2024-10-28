@@ -73,10 +73,15 @@ class Decoder_Layer(nn.Module):
 
 
     def forward(self, embeddings, encoder_output):
+        #Self Attention layer
         mha = self.mha(embeddings, embeddings, embeddings)
         mha = self.layer_norm(embeddings + mha)
+
+        #Encoder output attention layer
         mha2 = self.mha2(mha, encoder_output, encoder_output)
         mha2 = self.layer_norm2(mha + mha2)
+
+        #Feed Forward network
         feed_forward = self.feed_forward(mha2)
         feed_forward = self.layer_norm3(feed_forward + mha2)
         return feed_forward

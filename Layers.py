@@ -29,6 +29,7 @@ def positional_encoder(input):
     result[:, 1::2] = torch.cos(positions[:, 1::2])
 
     # Adds the positional encoding to the embedded vectors
+    # Broadcasts up in batch dim as pos info doesn't depend on batch index
     result = input + result.unsqueeze(1)
 
     return result
@@ -74,11 +75,11 @@ class Decoder_Layer(nn.Module):
 
     def forward(self, embeddings, encoder_output):
         #Self Attention layer
-        mha = self.mha(embeddings, embeddings, embeddings)
+        mha, _ = self.mha(embeddings, embeddings, embeddings)
         mha = self.layer_norm(embeddings + mha)
 
         #Encoder output attention layer
-        mha2 = self.mha2(mha, encoder_output, encoder_output)
+        mha2, _ = self.mha2(mha, encoder_output, encoder_output)
         mha2 = self.layer_norm2(mha + mha2)
 
         #Feed Forward network

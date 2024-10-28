@@ -1,11 +1,12 @@
 from torch import nn
 from Dataloader import VOCAB_SIZE
 import Layers
-from Layers import Encoder_Layer, EMBEDDING_DIMENSION
+from Layers import Encoder_Layer, EMBEDDING_DIMENSION, Decoder_Layer
 
 NUM_ENCODER_LAYERS = 6
+NUM_DECODER_LAYERS = 6
 
-class Seq2seq(nn.Module):
+class Transformer(nn.Module):
     def __init__(self):
         """
         Defines all layers to be used in the neural network
@@ -13,6 +14,7 @@ class Seq2seq(nn.Module):
         super().__init__()
         self.embed = nn.Embedding(VOCAB_SIZE, embedding_dim=EMBEDDING_DIMENSION)
         self.encoder_layer_stack = nn.ModuleList([Encoder_Layer() for _ in range(NUM_ENCODER_LAYERS)])
+        self.decoder_layer_stack = nn.ModuleList([Decoder_Layer() for _ in range(NUM_DECODER_LAYERS)])
 
 
     def forward(self, x):
@@ -23,12 +25,14 @@ class Seq2seq(nn.Module):
         :return: The outputted tensor
         """
 
-        #Turns sequence of int labels into vector encodings + positional information
-
         embedded_vectors = self.embed(x)
-        pos_added_vectors = Layers.positional_encoder(embedded_vectors)
+        embedded_vectors = Layers.positional_encoder(embedded_vectors)
+        encoder_output = embedded_vectors
 
         for layer in self.encoder_layer_stack:
-            pos_added_vectors = layer(pos_added_vectors)
+            encoder_output = layer(encoder_output)
 
-        return pos_added_vectors
+        for layer in self.decoder_layer_stack:
+            encoder_output = layer(embedded_vectors, encoder_output)
+
+        return encoder_output

@@ -43,6 +43,8 @@ class Encoder_Layer(nn.Module):
             nn.Linear(EMBEDDING_DIMENSION, EMBEDDING_DIMENSION)
         )
         self.layer_norm = nn.LayerNorm(EMBEDDING_DIMENSION)
+        self.layer_norm2 = nn.LayerNorm(EMBEDDING_DIMENSION)
+
 
     def forward(self, input):
         #Multi-headed attention
@@ -51,5 +53,30 @@ class Encoder_Layer(nn.Module):
 
         #Feed Forward network
         feed_forward = self.feed_forward(mha)
-        feed_forward = self.layer_norm(mha + feed_forward)
+        feed_forward = self.layer_norm2(mha + feed_forward)
+        return feed_forward
+
+class Decoder_Layer(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.mha = nn.MultiheadAttention(embed_dim=EMBEDDING_DIMENSION, num_heads=8)
+        self.mha2 = nn.MultiheadAttention(embed_dim=EMBEDDING_DIMENSION, num_heads=8)
+        self.feed_forward = nn.Sequential(
+            nn.Linear(EMBEDDING_DIMENSION, EMBEDDING_DIMENSION),
+            nn.ReLU(),
+            nn.Linear(EMBEDDING_DIMENSION, EMBEDDING_DIMENSION)
+        )
+        self.layer_norm = nn.LayerNorm(EMBEDDING_DIMENSION)
+        self.layer_norm2 = nn.LayerNorm(EMBEDDING_DIMENSION)
+        self.layer_norm3 = nn.LayerNorm(EMBEDDING_DIMENSION)
+
+
+
+    def forward(self, embeddings, encoder_output):
+        mha = self.mha(embeddings, embeddings, embeddings)
+        mha = self.layer_norm(embeddings + mha)
+        mha2 = self.mha2(mha, encoder_output, encoder_output)
+        mha2 = self.layer_norm2(mha + mha2)
+        feed_forward = self.feed_forward(mha2)
+        feed_forward = self.layer_norm3(feed_forward + mha2)
         return feed_forward

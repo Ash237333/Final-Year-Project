@@ -3,8 +3,10 @@ from tokenizers import Tokenizer
 from tokenizers.models import BPE
 from tokenizers.trainers import BpeTrainer
 from transformers import PreTrainedTokenizerFast
+from torch.utils.data import DataLoader
 
 VOCAB_SIZE = 30000
+
 
 def train_tokenizer():
     ds = load_dataset("wmt/wmt14", "de-en", split="test")
@@ -18,6 +20,7 @@ def train_tokenizer():
     BPE_tokenizer.train_from_iterator(dataset_iterator(ds),BPE_trainer, length = len(ds))
     BPE_tokenizer.save("BPE_Tokenizer.json")
 
+
 def load_dataset_and_preprocess():
     train_dataset = load_dataset("wmt/wmt14", "de-en", split="train")
     test_dataset = load_dataset("wmt/wmt14", "de-en", split="test")
@@ -27,7 +30,6 @@ def load_dataset_and_preprocess():
     print("-----------------")
     print(test_dataset[1])
     train_dataset = tokenize_dataset(train_dataset)
-
 
     return train_dataset, test_dataset
 
@@ -48,4 +50,8 @@ def tokenize_dataset(dataset):
     return tokenized_dataset
 
 
-load_dataset_and_preprocess()
+def create_dataloader():
+    train, test = load_dataset_and_preprocess()
+    train_loader = DataLoader(train)
+    test_loader = DataLoader(test)
+    return train_loader, test_loader

@@ -2,7 +2,7 @@ import Dataloader
 from Model import Transformer
 
 EPOCHS = 20
-train, test = Dataloader.load_dataset()
+train, test = Dataloader.create_dataloader()
 
 def train_one_epoch():
     return

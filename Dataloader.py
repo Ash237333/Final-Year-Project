@@ -6,6 +6,7 @@ from transformers import PreTrainedTokenizerFast
 from torch.utils.data import DataLoader
 
 VOCAB_SIZE = 30000
+BATCH_SIZE = 100
 
 
 def train_tokenizer():
@@ -52,6 +53,6 @@ def tokenize_dataset(dataset):
 
 def create_dataloader():
     train, test = load_dataset_and_preprocess()
-    train_loader = DataLoader(train)
-    test_loader = DataLoader(test)
+    train_loader = DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
+    test_loader = DataLoader(test, batch_size=BATCH_SIZE, shuffle=False)
     return train_loader, test_loader

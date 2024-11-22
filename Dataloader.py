@@ -1,5 +1,4 @@
-from cProfile import label
-
+import torch
 from datasets import load_dataset
 from tokenizers import Tokenizer
 from tokenizers.models import BPE
@@ -44,7 +43,6 @@ def tokenize_dataset(dataset):
         etext_tokenized = BPE_tokenizer.encode(example["translation"]["en"])
         return {
             "input_ids": gtext_tokenized,
-            "attention_mask": [1] * len(gtext_tokenized),
             "labels": etext_tokenized
         }
 
@@ -54,23 +52,20 @@ def tokenize_dataset(dataset):
 
 def create_dataloader():
     train, test = load_dataset_and_preprocess()
-    train_loader = DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
-    test_loader = DataLoader(test, batch_size=BATCH_SIZE, shuffle=False)
+    train_loader = DataLoader(train, batch_size=BATCH_SIZE, shuffle=True, collate_fn=collate_fn)
+    test_loader = DataLoader(test, batch_size=BATCH_SIZE, shuffle=False, collate_fn=collate_fn)
     return train_loader, test_loader
 
 def collate_fn(batch):
     input_ids, attention_mask, labels = [], [], []
     for i in batch:
-        input_ids.append(i["input_ids"])
-        attention_mask.append(i["attention_mask"])
-        labels.append(i["labels"])
+        input_ids.append(torch.tensor(i["input_ids"]))
+        labels.append(torch.tensor(i["labels"]))
 
     padded_input_ids = pad_sequence(input_ids, batch_first=True)
-    padded_attention_mask = pad_sequence(attention_mask, batch_first=True)
     padded_labels = pad_sequence(labels, batch_first=True)
 
     return {
         "input_ids": padded_input_ids,
-        "attention_mask": padded_attention_mask,
-        "labels": padded_labels,
+        "labels": padded_labels
     }

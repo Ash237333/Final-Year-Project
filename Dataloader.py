@@ -27,9 +27,6 @@ def load_dataset_and_preprocess():
     test_dataset = load_dataset("wmt/wmt14", "de-en", split="test")
 
     test_dataset = tokenize_dataset(test_dataset)
-    print(test_dataset[0])
-    print("-----------------")
-    print(test_dataset[1])
     train_dataset = tokenize_dataset(train_dataset)
 
     return train_dataset, test_dataset

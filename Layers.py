@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-EMBEDDING_DIMENSION = 100
+EMBEDDING_DIMENSION = 128
 
 def positional_encoder(input):
     """

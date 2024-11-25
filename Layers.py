@@ -48,16 +48,16 @@ class Encoder_Layer(nn.Module):
 
 
     def forward(self, input, padded_mask):
-        #Multi-headed attention
         #input.shape = (B, Seq_length, Embedding_dim)
         #Padding mask.shape = (B, seq_length)
+
+        # Multi-headed attention
         mha, _ = self.mha(input, input, input, key_padding_mask=padded_mask)
         mha = self.layer_norm(input + mha)
 
         #Feed Forward network
         feed_forward = self.feed_forward(mha)
         feed_forward = self.layer_norm2(mha + feed_forward)
-        print(feed_forward.shape)
 
         # Output same shape as input
         return feed_forward
@@ -78,9 +78,6 @@ class Decoder_Layer(nn.Module):
 
 
     def forward(self, target_seq, encoder_output, enc_padding_mask, target_padding_mask, target_subsequent_mask):
-        #Self Attention layer
-        #,key_padding_mask=target_padding_mask
-
         #target_seq.shape = (B, seq_length, Embedding_dim) - english labels
         #target_padding_mask.shape = (B, seq_length)
         #target_subsequent_mask.shape = (seq_length, seq_length)
@@ -88,12 +85,13 @@ class Decoder_Layer(nn.Module):
         #enc_padding_mask.shape = (B, seq_length)
         #German and english seq lengths will differ
 
-
-        mha, _ = self.mha(target_seq, target_seq, target_seq, key_padding_mask=target_padding_mask)
+        #Self Attention layer
+        mha, _ = self.mha(target_seq, target_seq, target_seq, key_padding_mask=target_padding_mask, attn_mask=target_subsequent_mask)
         mha = self.layer_norm(target_seq + mha)
+        #MHA has same shape as target_seq
 
-        #Encoder output attention layer
-        mha2, _ = self.mha2(mha, encoder_output, encoder_output, key_padding_mask=enc_padding_mask, attn_mask=target_subsequent_mask)
+        #Encoder-Decoder cross attention layer
+        mha2, _ = self.mha2(mha, encoder_output, encoder_output, key_padding_mask=enc_padding_mask)
         mha2 = self.layer_norm2(mha + mha2)
 
         #Feed Forward network

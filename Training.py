@@ -21,7 +21,7 @@ def train_one_epoch():
         german, english = german.to(device), english.to(device)
         optimizer.zero_grad()
         output = model(german, english)
-        loss = loss_fn(output, english)
+        loss = loss_fn((output.view(-1, output.size(2)), english.view(-1)))
         loss.backward()
         optimizer.step()
 
@@ -47,9 +47,8 @@ def eval():
         for i, data in enumerate(test_loader):
             german, english = data
             german, english = german.to(device), english.to(device)
-
             output = model(german)
-            loss = loss_fn(output, english)
+            loss = loss_fn((output.view(-1, output.size(2)), english.view(-1)))
             total_loss += loss.item()
 
     avg_loss = total_loss / len(test_loader)

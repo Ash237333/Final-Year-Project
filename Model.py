@@ -21,7 +21,7 @@ def pad_mask(input_seq):
 def subsequent_mask(target_seq_len):
     ones = torch.ones(target_seq_len, target_seq_len)
     mask = torch.triu(ones, diagonal=1)
-    return mask
+    return mask.bool()
 
 class Transformer(nn.Module):
     def __init__(self):

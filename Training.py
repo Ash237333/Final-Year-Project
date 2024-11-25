@@ -20,7 +20,7 @@ def train_one_epoch():
         german, english = data
         german, english = german.to(device), english.to(device)
         optimizer.zero_grad()
-        output = model(german)
+        output = model(german, english)
         loss = loss_fn(output, english)
         loss.backward()
         optimizer.step()

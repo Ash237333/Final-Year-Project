@@ -6,7 +6,6 @@ from tokenizers.trainers import BpeTrainer
 from transformers import PreTrainedTokenizerFast
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
-from transformers.models.gpt_neox.modeling_gpt_neox import attention_mask_func
 
 VOCAB_SIZE = 30000
 BATCH_SIZE = 100
@@ -56,6 +55,7 @@ def create_dataloader():
     test_loader = DataLoader(test, batch_size=BATCH_SIZE, shuffle=False, collate_fn=collate_fn)
     return train_loader, test_loader
 
+
 def collate_fn(batch):
     input_ids, attention_mask, labels = [], [], []
     for i in batch:
@@ -65,7 +65,4 @@ def collate_fn(batch):
     padded_input_ids = pad_sequence(input_ids, batch_first=True)
     padded_labels = pad_sequence(labels, batch_first=True)
 
-    return {
-        "input_ids": padded_input_ids,
-        "labels": padded_labels
-    }
+    return padded_input_ids, padded_labels

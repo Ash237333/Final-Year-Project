@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
 VOCAB_SIZE = 30000
-BATCH_SIZE = 100
+BATCH_SIZE = 1
 
 
 def train_tokenizer():

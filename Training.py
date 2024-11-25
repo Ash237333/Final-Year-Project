@@ -21,10 +21,13 @@ def train_one_epoch():
         german, english = german.to(device), english.to(device)
         optimizer.zero_grad()
         output = model(german, english)
-        loss = loss_fn((output.view(-1, output.size(2)), english.view(-1)))
+        flattened_output = output.view(-1, output.shape[2])
+        flattened_english = english.view(-1)
+        #Flattened squishes all sentences in the batch to one long string
+        #Needed because CEL only works on a 1D target and 2D input
+        loss = loss_fn(flattened_output, flattened_english)
         loss.backward()
         optimizer.step()
-
         if i % 100 == 99:
             last_loss = running_loss / 1000 # loss per batch
             print('  batch {} loss: {}'.format(i + 1, last_loss))
@@ -47,8 +50,10 @@ def eval():
         for i, data in enumerate(test_loader):
             german, english = data
             german, english = german.to(device), english.to(device)
-            output = model(german)
-            loss = loss_fn((output.view(-1, output.size(2)), english.view(-1)))
+            output = model(german, english)
+            flattened_output = output.view(1, output.shape[2])
+            flattened_english = english.view(1)
+            loss = loss_fn(flattened_output, flattened_english)
             total_loss += loss.item()
 
     avg_loss = total_loss / len(test_loader)

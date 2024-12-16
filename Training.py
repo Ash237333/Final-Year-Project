@@ -3,7 +3,7 @@ from Model import Transformer
 import torch
 from torch.optim import Adam
 from torch.nn import CrossEntropyLoss
-import time
+from torch.utils.tensorboard import SummaryWriter
 from Scheduler import WarmupScheduler
 from Layers import EMBEDDING_DIMENSION
 
@@ -12,28 +12,34 @@ EPOCHS = 1
 
 def train_one_epoch(epoch_num):
     running_loss = 0
+
     for i, data in enumerate(train_loader):
-        scheduler.update_lr(i + (epoch_num * len(train_loader) + 1))
+        #Calc current step and update LR
+        current_step = i + (epoch_num * len(train_loader) + 1)
+        scheduler.update_lr(current_step)
+
+        #Extract data and send to device
         german, english = data
         german, english = german.to(device), english.to(device)
+
         optimizer.zero_grad()
         output = model(german, english)
+
+        #Flattern output and targets to a form CEL accepts
         flattened_output = output.view(-1, output.shape[2])
         flattened_english = english.view(-1)
-        #Flattened squishes all sentences in the batch to one long string
-        #Needed because CEL only works on a 1D target and 2D input
+
+        #Calc loss and backpropagate
         loss = loss_fn(flattened_output, flattened_english)
         running_loss += loss.item()
-        with open("log_file.txt", "a") as file:
-            file.write(f"{loss.item()}\n")
-        print(loss.item())
         loss.backward()
         optimizer.step()
+
+        #Log metrics every 100 mini-batches
         if i % 100 == 99:
-            end_time = time.time()  # End timing
-            running_loss = running_loss / 100.0
+            avg_loss = running_loss/100
             running_loss = 0
-    return running_loss
+            writer.add_scalar("Loss/train", avg_loss, current_step)
 
 
 def train():
@@ -41,10 +47,10 @@ def train():
         print("EPOCH: ",epoch + 1, " -------------")
         model.train(True)
         train_one_epoch(epoch)
-        eval()
+        eval_model()
     return
 
-def eval():
+def eval_model():
     model.eval()
     total_loss = 0
     with torch.no_grad():
@@ -62,6 +68,7 @@ def eval():
 
 
 if __name__ == "__main__":
+    writer = SummaryWriter()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     loss_fn = CrossEntropyLoss()
     train_loader, test_loader = Dataloader.create_dataloader()
@@ -70,3 +77,4 @@ if __name__ == "__main__":
     optimizer = Adam(model.parameters(), lr=1e-3, betas=(0.9, 0.98), eps=1e-9)
     scheduler = WarmupScheduler(optimizer, 4000, EMBEDDING_DIMENSION)
     train()
+    writer.flush()

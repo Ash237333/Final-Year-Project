@@ -11,10 +11,8 @@ VOCAB_SIZE = 30000
 BATCH_SIZE = 8
 local_dataset_path = "wmt/wmt14"
 
-
 def train_tokenizer():
     ds = load_dataset(local_dataset_path, split="train", streaming="true")
-    ds = ds.take(300000)
     def dataset_iterator(dataset):
         for i in dataset:
             yield i["translation"]["de"]

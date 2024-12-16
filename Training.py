@@ -6,8 +6,13 @@ from torch.nn import CrossEntropyLoss
 from torch.utils.tensorboard import SummaryWriter
 from Scheduler import WarmupScheduler
 from Layers import EMBEDDING_DIMENSION
+import tqdm
+import os
 
 EPOCHS = 1
+
+SAVE_DIR = "./saves/run1"
+os.makedirs(SAVE_DIR)
 
 
 def train_one_epoch(epoch_num):
@@ -20,10 +25,11 @@ def train_one_epoch(epoch_num):
 
     running_loss = 0
 
-    for i, data in enumerate(train_loader):
+    for i, data in tqdm(enumerate(train_loader), total=len(train_loader)):
         # Calculate current step and update LR
         current_step = i + (epoch_num * len(train_loader) + 1)
-        scheduler.update_lr(current_step)
+        lr = scheduler.update_lr(current_step)
+        writer.add_scalar("Learning Rate", lr, current_step)
 
         # Extract data and send to device
         german, english = data
@@ -60,6 +66,7 @@ def train():
         model.train(True)
         train_one_epoch(epoch)
         eval_model(epoch)
+        save_checkpoint(epoch, model, optimizer)
     return
 
 def eval_model(epoch_num):
@@ -93,6 +100,22 @@ def eval_model(epoch_num):
     writer.flush()
 
 
+def save_checkpoint(epoch_num, model, optimizer):
+    """
+    Save model and optimizer states as a checkpoint.
+
+    :param epoch_num: The epoch number (used in the filename)
+    :param model: The model to save
+    :param optimizer: The optimizer to save
+    """
+    checkpoint_path = os.path.join(SAVE_DIR, f"epoch_{epoch_num + 1}.pth")
+    torch.save({
+        'epoch': epoch_num + 1,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict()
+    }, checkpoint_path)
+    print(f"Checkpoint saved: {checkpoint_path}")
+
 if __name__ == "__main__":
     writer = SummaryWriter()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -100,7 +123,8 @@ if __name__ == "__main__":
     train_loader, test_loader = Dataloader.create_dataloader()
     model = Transformer()
     model.to(device)
-    optimizer = Adam(model.parameters(), lr=1e-3, betas=(0.9, 0.98), eps=1e-9)
+    optimizer = Adam(model.parameters(), lr=0, betas=(0.9, 0.98), eps=1e-9)
     scheduler = WarmupScheduler(optimizer, 4000, EMBEDDING_DIMENSION)
     train()
     writer.flush()
+    writer.close()

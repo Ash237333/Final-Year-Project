@@ -1,5 +1,3 @@
-import torch
-
 class WarmupScheduler:
     def __init__(self, optimizer, warmup_steps, embedding_dim):
         self.optimizer = optimizer
@@ -12,4 +10,5 @@ class WarmupScheduler:
         lr = (self.embedding_dim**-0.5) * min(decay_term, warmup_term)
         for param_group in self.optimizer.param_groups:
             param_group['lr'] = lr
+        return lr
     

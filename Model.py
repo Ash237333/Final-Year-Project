@@ -35,43 +35,38 @@ class Transformer(nn.Module):
         self.fc_final = nn.Linear(EMBEDDING_DIMENSION, VOCAB_SIZE)
 
 
-    def forward(self, x, target):
+    def forward(self, input, target):
         """
         Defines the order which tensors are passed through the layers in the neural network
 
-        :param x: Batch of sequences of int labels, (Seq_length, Batch_size)
+        :param input: Batch of sequences of int labels, (Seq_length, Batch_size)
         :return: The outputted tensor
         """
 
         #Set up enc inputs by turning labels into embedded vectors
         #Calculate padding mask for inputs as well
-
-        # x.shape = (B, Seq_length)
-        # padded_mask.shape = (B, Seq_length)
-        padded_mask = pad_mask(x)
-
-        embedded_vectors = self.embed(x)
-        embedded_vectors = Layers.positional_encoder(embedded_vectors)
-        encoder_output = embedded_vectors
-        # encoder_output.shape = (B, Seq_length, Embedding_dim)
+        padded_mask = pad_mask(input)
+        x = self.embed(input)
+        x = Layers.positional_encoder(x)
 
         #Encoder stack
         for layer in self.encoder_layer_stack:
-            encoder_output = layer(encoder_output, padded_mask)
+            x = layer(x, padded_mask)
 
 
         #Set up decoder inputs by embedding target labels
         #Calculate padding mask for targets as well
         target_padding_mask = pad_mask(target)
-        target_embedded = self.embed(target)
-        target_embedded = Layers.positional_encoder(target_embedded)
         target_subsequent_mask = subsequent_mask(target.shape[1], target.device)
 
+        y = self.embed(target)
+        y = Layers.positional_encoder(y)
+
+
         #Decoder Stack
-        decoder_output = target_embedded
         for layer in self.decoder_layer_stack:
-            decoder_output = layer(decoder_output, encoder_output, padded_mask,target_padding_mask, target_subsequent_mask)
+            y = layer(y, x, padded_mask,target_padding_mask, target_subsequent_mask)
 
-        output = self.fc_final(decoder_output)
+        y = self.fc_final(y)
 
-        return output
+        return y

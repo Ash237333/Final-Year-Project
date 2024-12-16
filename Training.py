@@ -6,7 +6,7 @@ from torch.nn import CrossEntropyLoss
 from torch.utils.tensorboard import SummaryWriter
 from Scheduler import WarmupScheduler
 from Layers import EMBEDDING_DIMENSION
-import tqdm
+from tqdm import tqdm
 import os
 
 EPOCHS = 1
@@ -27,15 +27,14 @@ def train_one_epoch(epoch_num):
 
     for i, data in tqdm(enumerate(train_loader), total=len(train_loader)):
         # Calculate current step and update LR
+        optimizer.zero_grad()
         current_step = i + (epoch_num * len(train_loader) + 1)
         lr = scheduler.update_lr(current_step)
         writer.add_scalar("Learning Rate", lr, current_step)
 
-        # Extract data and send to device
+        # Extract data, send to device and pass through the network
         german, english = data
         german, english = german.to(device), english.to(device)
-
-        optimizer.zero_grad()
         output = model(german, english)
 
         # Flatten output and targets to a form CEL accepts

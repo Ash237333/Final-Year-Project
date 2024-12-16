@@ -30,7 +30,9 @@ def positional_encoder(input):
 
     # Adds the positional encoding to the embedded vectors
     # Broadcasts up in batch dim as pos info doesn't depend on batch index
+    result = result.to(input.device)
     result = input + result.unsqueeze(1)
+    
 
     return result
 

@@ -18,8 +18,8 @@ def pad_mask(input_seq):
     input_seq = input_seq == PAD_VALUE
     return input_seq
 
-def subsequent_mask(target_seq_len):
-    ones = torch.ones(target_seq_len, target_seq_len)
+def subsequent_mask(target_seq_len, device):
+    ones = torch.ones(target_seq_len, target_seq_len, device=device)
     mask = torch.triu(ones, diagonal=1)
     return mask.bool()
 
@@ -65,7 +65,7 @@ class Transformer(nn.Module):
         target_padding_mask = pad_mask(target)
         target_embedded = self.embed(target)
         target_embedded = Layers.positional_encoder(target_embedded)
-        target_subsequent_mask = subsequent_mask(target.shape[1])
+        target_subsequent_mask = subsequent_mask(target.shape[1], target.device)
 
         #Decoder Stack
         decoder_output = target_embedded

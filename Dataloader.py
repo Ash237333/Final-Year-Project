@@ -8,25 +8,27 @@ from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
 VOCAB_SIZE = 30000
-BATCH_SIZE = 1
+BATCH_SIZE = 8
+local_dataset_path = "wmt/wmt14"
 
 
 def train_tokenizer():
-    ds = load_dataset("wmt/wmt14", "de-en", split="test")
+    ds = load_dataset(local_dataset_path, split="train", streaming="true")
+    ds = ds.take(300000)
     def dataset_iterator(dataset):
         for i in dataset:
             yield i["translation"]["de"]
             yield i["translation"]["en"]
 
     BPE_tokenizer = Tokenizer(BPE())
-    BPE_trainer = BpeTrainer(vocab_size=VOCAB_SIZE, show_progress=True)
-    BPE_tokenizer.train_from_iterator(dataset_iterator(ds),BPE_trainer, length = len(ds))
+    BPE_trainer = BpeTrainer(vocab_size=VOCAB_SIZE, show_progress=True, special_tokens=["[PAD]", "[UNK]"])
+    BPE_tokenizer.train_from_iterator(dataset_iterator(ds),BPE_trainer, length = 300000*2)
     BPE_tokenizer.save("BPE_Tokenizer.json")
 
 
 def load_dataset_and_preprocess():
-    train_dataset = load_dataset("wmt/wmt14", "de-en", split="train")
-    test_dataset = load_dataset("wmt/wmt14", "de-en", split="test")
+    train_dataset = load_dataset(local_dataset_path, "de-en", split="train")
+    test_dataset = load_dataset(local_dataset_path,"de-en", split="test")
 
     test_dataset = tokenize_dataset(test_dataset)
     train_dataset = tokenize_dataset(train_dataset)
@@ -66,3 +68,6 @@ def collate_fn(batch):
     padded_labels = pad_sequence(labels, batch_first=True)
 
     return padded_input_ids, padded_labels
+
+train_dataset = load_dataset(local_dataset_path, "de-en", split="train")
+print(len(train_dataset))

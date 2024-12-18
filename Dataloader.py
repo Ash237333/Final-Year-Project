@@ -4,6 +4,7 @@ from transformers import PreTrainedTokenizerFast
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
+
 VOCAB_SIZE = 37000
 BATCH_SIZE = 16
 local_dataset_path = "wmt/wmt14"

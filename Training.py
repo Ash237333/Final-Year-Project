@@ -11,6 +11,8 @@ import os
 
 EPOCHS = 1
 
+torch.manual_seed(1)
+
 SAVE_DIR = "./saves/run1"
 os.makedirs(SAVE_DIR)
 
@@ -30,8 +32,7 @@ def train_one_epoch(epoch_num):
         # Calculate current step and update LR
         optimizer.zero_grad()
         current_step = i + (epoch_num * length + 1)
-        lr = scheduler.update_lr(current_step)
-        writer.add_scalar("Learning Rate", lr, current_step)
+
 
         # Extract data, send to device and pass through the network
         german, english = data
@@ -48,7 +49,8 @@ def train_one_epoch(epoch_num):
         running_loss += loss.item()
         loss.backward()
 
-        optimizer.step()
+        lr = optimizer.step_and_update()
+        writer.add_scalar("Learning Rate", lr, current_step)
 
         #Log metrics every 100 mini-batches
         if i % 100 == 99:
@@ -127,8 +129,7 @@ if __name__ == "__main__":
     train_loader, test_loader = Dataloader.create_dataloader()
     model = Transformer()
     model.to(device)
-    optimizer = Adam(model.parameters(), lr=0, betas=(0.9, 0.98), eps=1e-9)
-    scheduler = WarmupScheduler(optimizer, 4000, EMBEDDING_DIMENSION)
+    optimizer = WarmupScheduler(Adam(model.parameters(), lr=0, betas=(0.9, 0.98), eps=1e-9), 4000, EMBEDDING_DIMENSION)
     train()
     writer.flush()
     writer.close()

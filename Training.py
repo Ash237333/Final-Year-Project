@@ -23,28 +23,31 @@ def train_one_epoch(epoch_num):
     :param epoch_num: The number of epochs already completed, used to calculate current step number
     """
 
+    length = len(train_loader)
     running_loss = 0
 
-    for i, data in tqdm(enumerate(train_loader), total=len(train_loader)):
+    for i, data in tqdm(enumerate(train_loader), total=length):
         # Calculate current step and update LR
         optimizer.zero_grad()
-        current_step = i + (epoch_num * len(train_loader) + 1)
+        current_step = i + (epoch_num * length + 1)
         lr = scheduler.update_lr(current_step)
         writer.add_scalar("Learning Rate", lr, current_step)
 
         # Extract data, send to device and pass through the network
         german, english = data
+
         german, english = german.to(device), english.to(device)
         output = model(german, english)
 
         # Flatten output and targets to a form CEL accepts
-        flattened_output = output.view(-1, output.shape[2])
-        flattened_english = english.view(-1)
+        output = output.view(-1, output.shape[2])
+        english = english.view(-1)
 
         # Calculate loss and backpropagate
-        loss = loss_fn(flattened_output, flattened_english)
+        loss = loss_fn(output, english)
         running_loss += loss.item()
         loss.backward()
+
         optimizer.step()
 
         #Log metrics every 100 mini-batches
@@ -115,9 +118,11 @@ def save_checkpoint(epoch_num, model, optimizer):
     }, checkpoint_path)
     print(f"Checkpoint saved: {checkpoint_path}")
 
+
 if __name__ == "__main__":
     writer = SummaryWriter()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(device)
     loss_fn = CrossEntropyLoss()
     train_loader, test_loader = Dataloader.create_dataloader()
     model = Transformer()

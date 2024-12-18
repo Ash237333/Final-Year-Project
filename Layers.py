@@ -32,7 +32,6 @@ def positional_encoder(input):
     # Broadcasts up in batch dim as pos info doesn't depend on batch index
     result = result.to(input.device)
     result = input + result.unsqueeze(1)
-    
 
     return result
 

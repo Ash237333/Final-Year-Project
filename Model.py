@@ -19,9 +19,9 @@ def pad_mask(input_seq):
     return input_seq
 
 def subsequent_mask(target_seq_len, device):
-    ones = torch.ones(target_seq_len, target_seq_len, device=device)
-    mask = torch.triu(ones, diagonal=1)
-    return mask.bool()
+    mask = torch.ones(target_seq_len, target_seq_len)
+    mask = torch.triu(mask, diagonal=1)
+    return mask.bool().to(device)
 
 class Transformer(nn.Module):
     def __init__(self):
@@ -54,8 +54,8 @@ class Transformer(nn.Module):
             x = layer(x, padded_mask)
 
 
-        #Set up decoder inputs by embedding target labels
-        #Calculate padding mask for targets as well
+        # Set up decoder inputs by embedding target labels
+        # Calculate padding mask for targets as well
         target_padding_mask = pad_mask(target)
         target_subsequent_mask = subsequent_mask(target.shape[1], target.device)
 
@@ -63,7 +63,7 @@ class Transformer(nn.Module):
         y = Layers.positional_encoder(y)
 
 
-        #Decoder Stack
+        # Decoder Stack
         for layer in self.decoder_layer_stack:
             y = layer(y, x, padded_mask,target_padding_mask, target_subsequent_mask)
 

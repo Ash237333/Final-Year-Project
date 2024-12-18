@@ -1,10 +1,8 @@
-import torch
 from datasets import load_dataset
 from transformers import PreTrainedTokenizerFast
 from torch.utils.data import DataLoader
-from torch.nn.utils.rnn import pad_sequence
+import torch
 
-VOCAB_SIZE = 37000
 BATCH_SIZE = 16
 local_dataset_path = "wmt/wmt14"
 MAX_LENGTH = 512
@@ -16,7 +14,7 @@ def create_dataloader():
     test_dataset = load_dataset(local_dataset_path,"de-en", split="test")
     test_dataset = tokenize_dataset(test_dataset)
     test_dataset = remove_long_data(test_dataset)
-    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=True, collate_fn=collate_fn)
+    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, collate_fn=collate_fn)
 
     train_dataset = load_dataset(local_dataset_path, "de-en", split="train")
     train_dataset = tokenize_dataset(train_dataset)
@@ -27,16 +25,15 @@ def create_dataloader():
 
 
 def collate_fn(batch):
-    input_ids = []
-    labels = []
-    for example in batch:
-        input_id = example["input_ids"]
-        label = example["labels"]
-        input_ids.append(torch.tensor(input_id))
-        labels.append(torch.tensor(label))
+    input_ids = [example["input_ids"] for example in batch]
+    labels = [example["labels"] for example in batch]
 
-    input_ids = pad_sequence(input_ids, batch_first=True)
-    labels = pad_sequence(labels, batch_first=True)
+    input_ids = torch.tensor(
+        [BPE_tokenizer.pad({"input_ids": ids}, padding="max_length", max_length=MAX_LENGTH)["input_ids"]
+             for ids in input_ids])
+    labels = torch.tensor(
+        [BPE_tokenizer.pad({"input_ids": lbls}, padding="max_length", max_length=MAX_LENGTH)["input_ids"]
+             for lbls in labels])
 
     return input_ids, labels
 

@@ -18,10 +18,20 @@ def pad_mask(input_seq):
     input_seq = input_seq == PAD_VALUE
     return input_seq
 
+
 def subsequent_mask(target_seq_len, device):
     mask = torch.ones(target_seq_len, target_seq_len)
     mask = torch.triu(mask, diagonal=1)
     return mask.bool().to(device)
+
+
+def bos_prepend(targets, bos_token=2):
+    #Adds the bos token as the first token in each seq
+    #Done like this to avoid storing multiple copies on the gpu
+    bos_column = torch.full((targets.shape[0],1), bos_token, device=targets.device)
+    targets = torch.cat([bos_column, targets], dim=1)
+    return targets
+
 
 class Transformer(nn.Module):
     def __init__(self):
@@ -56,8 +66,10 @@ class Transformer(nn.Module):
 
         # Set up decoder inputs by embedding target labels
         # Calculate padding mask for targets as well
+        target = bos_prepend(target)
         target_padding_mask = pad_mask(target)
         target_subsequent_mask = subsequent_mask(target.shape[1], target.device)
+
 
         y = self.embed(target)
         y = Layers.positional_encoder(y)

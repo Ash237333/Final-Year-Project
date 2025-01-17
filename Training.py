@@ -11,10 +11,15 @@ import os
 
 EPOCHS = 1
 
-torch.manual_seed(1)
-
-SAVE_DIR = "./saves/run1"
+SAVE_DIR = "./saves/run5"
 os.makedirs(SAVE_DIR)
+
+def eos_append(targets, eos_token=3):
+    #Adds the eos as the last token in each sequence for loss calc
+    #Done this way to prevent storing multiple copies on the gpu
+    eos_column = torch.full((targets.shape[0],1), eos_token, device=targets.device)
+    targets = torch.cat([targets, eos_column], dim=1)
+    return targets
 
 
 def train_one_epoch(epoch_num):
@@ -31,14 +36,13 @@ def train_one_epoch(epoch_num):
     for i, data in tqdm(enumerate(train_loader), total=length):
         # Calculate current step and update LR
         optimizer.zero_grad()
-        current_step = i + (epoch_num * length + 1)
-
 
         # Extract data, send to device and pass through the network
         german, english = data
 
         german, english = german.to(device), english.to(device)
         output = model(german, english)
+        english = eos_append(english)
 
         # Flatten output and targets to a form CEL accepts
         output = output.view(-1, output.shape[2])
@@ -49,15 +53,15 @@ def train_one_epoch(epoch_num):
         running_loss += loss.item()
         loss.backward()
 
-        lr = optimizer.step_and_update()
-        writer.add_scalar("Learning Rate", lr, current_step)
+        lr, step = optimizer.step_and_update()
+        writer.add_scalar("Learning Rate", lr, step)
 
         #Log metrics every 100 mini-batches
         if i % 100 == 99:
             avg_loss = running_loss/100
             running_loss = 0
-            writer.add_scalar("Loss/train", avg_loss, current_step)
-            writer.flush()
+            writer.add_scalar("Loss/train", avg_loss, step)
+
 
 
 def train():
@@ -70,6 +74,7 @@ def train():
         model.train(True)
         train_one_epoch(epoch)
         eval_model(epoch)
+        writer.flush()
         save_checkpoint(epoch, model, optimizer)
     return
 
@@ -89,6 +94,7 @@ def eval_model(epoch_num):
             german, english = german.to(device), english.to(device)
 
             output = model(german, english)
+            english = eos_append(english)
 
             # Flatten output and targets to a form CEL accepts
             flattened_output = output.view(-1, output.shape[2])
@@ -101,7 +107,6 @@ def eval_model(epoch_num):
     # Calculate average loss and log after all batches completed
     avg_loss = total_loss / len(test_loader)
     writer.add_scalar("Loss/test", avg_loss, epoch_num + 1)
-    writer.flush()
 
 
 def save_checkpoint(epoch_num, model, optimizer):
@@ -116,9 +121,10 @@ def save_checkpoint(epoch_num, model, optimizer):
     torch.save({
         'epoch': epoch_num + 1,
         'model_state_dict': model.state_dict(),
-        'optimizer_state_dict': optimizer.state_dict()
+        'optimizer_state_dict': optimizer.state_dict(),
     }, checkpoint_path)
     print(f"Checkpoint saved: {checkpoint_path}")
+
 
 
 if __name__ == "__main__":

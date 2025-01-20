@@ -18,7 +18,7 @@ model.to(device)
 model.eval()
 
 #Prepare the input phrase
-input_phrase = "Sie ist Orange (Ey, ey) Anni, sag mir, warum auf Distanz?"
+input_phrase = "ich"
 BPE_tokenizer = PreTrainedTokenizerFast(tokenizer_file="BPE_Tokenizer.json")
 input_tensor = BPE_tokenizer.encode(input_phrase)
 print(input_tensor)
@@ -28,7 +28,7 @@ target = torch.tensor([[]]).long().to(device) # Start with BOS token (shape: (1,
 
 # Step 3: Perform inference (generate tokens one by one)
 output_tokens = []
-for _ in range(10):
+for _ in range(30):
     # Pass the current input and target to the model
     logits = model(input_tensor, target)
 

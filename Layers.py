@@ -2,6 +2,8 @@ import torch
 from torch import nn
 
 EMBEDDING_DIMENSION = 512
+DROPOUT_PROB = 0.1
+FFN_INNER_SIZE = 2048
 
 def positional_encoder(input):
     """
@@ -25,7 +27,7 @@ def positional_encoder(input):
     positions = positions / divisor
 
     # Applies sin/cos based on if the number is odd or even
-    result[:, ::2] = torch.sin(positions[:, ::2])
+    result[:, 0::2] = torch.sin(positions[:, 0::2])
     result[:, 1::2] = torch.cos(positions[:, 1::2])
 
     # Adds the positional encoding to the embedded vectors
@@ -40,12 +42,14 @@ class Encoder_Layer(nn.Module):
         super().__init__()
         self.mha = nn.MultiheadAttention(embed_dim=EMBEDDING_DIMENSION, num_heads=8, batch_first=True)
         self.feed_forward = nn.Sequential(
-            nn.Linear(EMBEDDING_DIMENSION, EMBEDDING_DIMENSION),
+            nn.Linear(EMBEDDING_DIMENSION, FFN_INNER_SIZE),
             nn.ReLU(),
-            nn.Linear(EMBEDDING_DIMENSION, EMBEDDING_DIMENSION)
+            nn.Linear(FFN_INNER_SIZE, EMBEDDING_DIMENSION)
         )
         self.layer_norm = nn.LayerNorm(EMBEDDING_DIMENSION)
         self.layer_norm2 = nn.LayerNorm(EMBEDDING_DIMENSION)
+        self.dropout1 = nn.Dropout(DROPOUT_PROB)
+        self.dropout2 = nn.Dropout(DROPOUT_PROB)
 
 
     def forward(self, input, padded_mask):
@@ -54,10 +58,12 @@ class Encoder_Layer(nn.Module):
 
         # Multi-headed attention
         x, _ = self.mha(input, input, input, key_padding_mask=padded_mask)
+        x = self.dropout1(x)
         x = self.layer_norm(input + x)
 
         #Feed Forward network
         y = self.feed_forward(x)
+        y = self.dropout2(y)
         y = self.layer_norm2(x + y)
 
         # Output same shape as input
@@ -69,13 +75,18 @@ class Decoder_Layer(nn.Module):
         self.mha = nn.MultiheadAttention(embed_dim=EMBEDDING_DIMENSION, num_heads=8, batch_first=True)
         self.mha2 = nn.MultiheadAttention(embed_dim=EMBEDDING_DIMENSION, num_heads=8,  batch_first=True)
         self.feed_forward = nn.Sequential(
-            nn.Linear(EMBEDDING_DIMENSION, EMBEDDING_DIMENSION),
+            nn.Linear(EMBEDDING_DIMENSION, FFN_INNER_SIZE),
             nn.ReLU(),
-            nn.Linear(EMBEDDING_DIMENSION, EMBEDDING_DIMENSION)
+            nn.Linear(FFN_INNER_SIZE, EMBEDDING_DIMENSION)
         )
         self.layer_norm = nn.LayerNorm(EMBEDDING_DIMENSION)
         self.layer_norm2 = nn.LayerNorm(EMBEDDING_DIMENSION)
         self.layer_norm3 = nn.LayerNorm(EMBEDDING_DIMENSION)
+        self.dropout1 = nn.Dropout(DROPOUT_PROB)
+        self.dropout2 = nn.Dropout(DROPOUT_PROB)
+        self.dropout3 = nn.Dropout(DROPOUT_PROB)
+
+
 
 
     def forward(self, target_seq, encoder_output, enc_padding_mask, target_padding_mask, target_subsequent_mask):
@@ -88,14 +99,17 @@ class Decoder_Layer(nn.Module):
 
         #Self Attention layer
         x, _ = self.mha(target_seq, target_seq, target_seq, key_padding_mask=target_padding_mask, attn_mask=target_subsequent_mask)
+        x = self.dropout1(x)
         x = self.layer_norm(target_seq + x)
         #MHA has same shape as target_seq
 
         #Encoder-Decoder cross attention layer
         y, _ = self.mha2(x, encoder_output, encoder_output, key_padding_mask=enc_padding_mask)
+        y = self.dropout2(y)
         y = self.layer_norm2(x + y)
 
         #Feed Forward network
         z = self.feed_forward(y)
+        z = self.dropout3(z)
         z = self.layer_norm3(z + y)
         return z

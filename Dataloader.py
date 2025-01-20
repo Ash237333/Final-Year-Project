@@ -9,9 +9,9 @@ from tokenizers.trainers import BpeTrainer
 
 
 VOCAB_SIZE = 37000
-BATCH_SIZE = 16
+BATCH_SIZE = 8
 local_dataset_path = "wmt/wmt14"
-MAX_LENGTH = 512
+MAX_LENGTH = 256
 
 
 def train_tokenizer():
@@ -73,4 +73,9 @@ def tokenize_dataset(dataset):
 
 def remove_long_data(ds):
     return ds.filter(lambda example: all(len(example[key]) <= MAX_LENGTH for key in ['input_ids', 'labels']))
+
+def decode_single_phrase(token_array):
+    BPE_tokenizer = PreTrainedTokenizerFast(tokenizer_file="BPE_Tokenizer.json")
+    decoded_phrase = BPE_tokenizer.decode(token_array)
+    return decoded_phrase
 

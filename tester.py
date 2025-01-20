@@ -2,20 +2,23 @@
 from Model import Transformer
 import torch
 from transformers import PreTrainedTokenizerFast
+import torch.nn as nn
+import Dataloader
 
 #Set up device to use
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 #Load up the model
-checkpoint = torch.load("epoch_1.pth")
+checkpoint = torch.load("./saves/run9/epoch_1.pth")
 model = Transformer()
+model = nn.DataParallel(model)
 model.load_state_dict(checkpoint['model_state_dict'])
 model.to(device)
 model.eval()
 
 #Prepare the input phrase
-input_phrase = "Ich liebe dich"
+input_phrase = "Sie ist Orange (Ey, ey) Anni, sag mir, warum auf Distanz?"
 BPE_tokenizer = PreTrainedTokenizerFast(tokenizer_file="BPE_Tokenizer.json")
 input_tensor = BPE_tokenizer.encode(input_phrase)
 print(input_tensor)
@@ -33,3 +36,6 @@ for _ in range(10):
 
     pred_tokens_print = target.squeeze()
     print(pred_tokens_print)
+
+phrase = Dataloader.decode_single_phrase(pred_tokens_print)
+print(phrase)

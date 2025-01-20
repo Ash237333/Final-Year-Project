@@ -8,6 +8,7 @@ from Scheduler import WarmupScheduler
 from Layers import EMBEDDING_DIMENSION
 from tqdm import tqdm
 import os
+import torch.nn as nn
 
 EPOCHS = 1
 
@@ -134,6 +135,7 @@ if __name__ == "__main__":
     loss_fn = CrossEntropyLoss()
     train_loader, test_loader = Dataloader.create_dataloader()
     model = Transformer()
+    model = nn.DataParallel(model)
     model.to(device)
     optimizer = WarmupScheduler(Adam(model.parameters(), lr=0, betas=(0.9, 0.98), eps=1e-9), 4000, EMBEDDING_DIMENSION)
     train()

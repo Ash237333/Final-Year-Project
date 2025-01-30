@@ -11,6 +11,7 @@ import os
 import torch.nn as nn
 
 EPOCHS = 1
+ACCUMULATION_STEPS = 8
 
 SAVE_DIR = "./saves/run5"
 os.makedirs(SAVE_DIR)
@@ -34,10 +35,9 @@ def train_one_epoch(epoch_num):
     length = len(train_loader)
     running_loss = 0
 
-    for i, data in tqdm(enumerate(train_loader), total=length):
-        # Calculate current step and update LR
-        optimizer.zero_grad()
+    optimizer.zero_grad()
 
+    for i, data in tqdm(enumerate(train_loader), total=length):
         # Extract data, send to device and pass through the network
         german, english = data
 
@@ -50,18 +50,21 @@ def train_one_epoch(epoch_num):
         english = english.view(-1)
 
         # Calculate loss and backpropagate
-        loss = loss_fn(output, english)
-        running_loss += loss.item()
+        loss = loss_fn(output, english) / ACCUMULATION_STEPS
+        running_loss += loss.item() * ACCUMULATION_STEPS
         loss.backward()
 
-        lr, step = optimizer.step_and_update()
-        writer.add_scalar("Learning Rate", lr, step)
+        if (i + 1) % ACCUMULATION_STEPS == 0 or (i + 1) == length:
+            lr, step = optimizer.step_and_update()
+            writer.add_scalar("Learning Rate", lr, step)
+            optimizer.zero_grad()
 
-        #Log metrics every 100 mini-batches
-        if i % 100 == 99:
-            avg_loss = running_loss/100
-            running_loss = 0
-            writer.add_scalar("Loss/train", avg_loss, step)
+            # Log metrics every 100 mini-accumulated-batches
+            if step % 100 == 99:
+                avg_loss = running_loss / 100
+                running_loss = 0
+                writer.add_scalar("Loss/train", avg_loss, step)
+
 
 
 

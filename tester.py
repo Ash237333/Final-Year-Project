@@ -18,7 +18,7 @@ model.to(device)
 model.eval()
 
 #Prepare the input phrase
-input_phrase = "Ich bau' uns ein Haus, was du auch hättest"
+input_phrase = "Ich mag es"
 BPE_tokenizer = PreTrainedTokenizerFast(tokenizer_file="BPE_Tokenizer.json")
 input_tensor = BPE_tokenizer.encode(input_phrase)
 input_tensor = torch.tensor(input_tensor).unsqueeze(0).to(device)

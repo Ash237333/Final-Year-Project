@@ -4,6 +4,7 @@ import torch.nn as nn
 from Model import Transformer
 from transformers import PreTrainedTokenizerFast
 import Dataloader
+from fastapi.middleware.cors import CORSMiddleware
 
 #Setup torch, Load in model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -17,6 +18,14 @@ model.eval()
 
 #Setup FastAPI
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins (use specific domains in production)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
 
 
 @app.get("/translation/{german_text}")

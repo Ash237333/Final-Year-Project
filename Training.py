@@ -13,7 +13,7 @@ import torch.nn as nn
 EPOCHS = 1
 ACCUMULATION_STEPS = 8
 
-SAVE_DIR = "./saves/run5"
+SAVE_DIR = "./saves/runtest"
 os.makedirs(SAVE_DIR)
 
 def eos_append(targets, eos_token=3):
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     writer = SummaryWriter()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(device)
-    loss_fn = CrossEntropyLoss()
+    loss_fn = CrossEntropyLoss(ignore_index=0)
     train_loader, test_loader = Dataloader.create_dataloader()
     model = Transformer()
     model = nn.DataParallel(model)

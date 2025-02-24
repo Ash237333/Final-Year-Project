@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 #Setup torch, Load in model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
-checkpoint = torch.load("./saves/run13/epoch_4.pth")
+checkpoint = torch.load("./saves/run14/epoch_4.pth")
 model = Transformer()
 model = nn.DataParallel(model)
 model.load_state_dict(checkpoint['model_state_dict'])
@@ -37,11 +37,14 @@ async def translate(german_text: str):
     target = torch.tensor([[]]).long().to(device)
 
     output_tokens = []
-    for _ in range(7):
+    for _ in range(70):
         # Pass the current input and target to the modelI love you
         logits = model(input_tensor, target)
 
         next_token = logits[:, -1, :].argmax(dim=-1)  # Get the next token
+
+        if next_token == 3:
+            break
 
         # Append the token to the sequence
         output_tokens.append(next_token.item())

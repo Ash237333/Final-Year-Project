@@ -24,15 +24,23 @@ function newCaptions(mutations, observer){
 
 async function translateCaption(caption){
     try {
-        let response = await fetch(`http://127.0.0.1:8000/translation/${caption}`)
+        let startTime = performance.now(); // Start timing
 
+        let response = await fetch(`http://127.0.0.1:8000/translation/${caption}`);
+
+        let endTime = performance.now(); // End timing
+        console.log(`Fetch request took ${(endTime - startTime).toFixed(2)} ms`);
         if (!response.ok){
-            throw new Error("Response was an error: ${response.status}");
+            throw new Error(`Response was an error: ${response.status}`);
         }
         
         let translatedCaption = await response.json();
-
-        console.log(translatedCaption);
+        
+        // content.js
+        chrome.runtime.sendMessage({
+            type: "updateCaption",
+            message: translatedCaption
+        });
     }
     catch(error){
         console.error("Error connecting to the API", error)

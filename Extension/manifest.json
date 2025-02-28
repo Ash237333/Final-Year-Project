@@ -3,8 +3,17 @@
   "description": "Base Level Extension",
   "version": "1.0",
   "manifest_version": 3,
+  "permissions": [
+    "sidePanel"
+  ],
+  "background": {
+    "service_worker": "/scripts/worker.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
   "action": {
-    "default_popup": "hello.html",
+    "default_title": "Click to open panel",
     "default_icon": "hello_extensions.png"
   },
   "content_scripts": [

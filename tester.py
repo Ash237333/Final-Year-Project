@@ -10,7 +10,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 #Load up the model
-checkpoint = torch.load("./saves/run14/epoch_4.pth")
+checkpoint = torch.load("./saves/run14/epoch_5.pth")
 model = Transformer()
 model = nn.DataParallel(model)
 model.load_state_dict(checkpoint['model_state_dict'])
@@ -18,7 +18,7 @@ model.to(device)
 model.eval()
 
 #Prepare the input phrase
-input_phrase = "Ich mag du"
+input_phrase = "Du bist geschmeidig, bringst mir nur in Trance"
 BPE_tokenizer = PreTrainedTokenizerFast(tokenizer_file="BPE_Tokenizer.json")
 input_tensor = BPE_tokenizer.encode(input_phrase)
 input_tensor = torch.tensor(input_tensor).unsqueeze(0).to(device)
@@ -43,3 +43,6 @@ for _ in range(70):
 
 phrase = Dataloader.decode_single_phrase(output_tokens)
 print(phrase)
+print(output_tokens)
+#for char in phrase:
+#    print(char)

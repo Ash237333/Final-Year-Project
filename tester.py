@@ -28,7 +28,7 @@ target = torch.tensor([[]]).long().to(device) # Start with BOS token (shape: (1,
 # Step 3: Perform inference (generate tokens one by one)
 output_tokens = []
 for _ in range(70):
-    # Pass the current input and target to the modelI love you
+    # Pass the current input and target to the model
     logits = model(input_tensor, target)
 
     next_token = logits[:, -1, :].argmax(dim=-1)  # Get the next token

@@ -9,12 +9,15 @@ from Layers import EMBEDDING_DIMENSION
 from tqdm import tqdm
 import os
 import torch.nn as nn
+from torchmetrics.text.bleu import BLEUScore
 
 EPOCHS = 1
 ACCUMULATION_STEPS = 8
 
 SAVE_DIR = "./saves/runtest"
 os.makedirs(SAVE_DIR)
+
+BPE_tokenizer = Dataloader.load_BPE()
 
 def eos_append(targets, eos_token=3):
     #Adds the eos as the last token in each sequence for loss calc
@@ -89,6 +92,8 @@ def eval_model(epoch_num):
 
     :param epoch_num: The number of epochs already completed, used to log loss
     """
+    all_predictions = []
+    all_originals = []
 
     model.eval()
     total_loss = 0
@@ -108,9 +113,20 @@ def eval_model(epoch_num):
             loss = loss_fn(flattened_output, flattened_english)
             total_loss += loss.item()
 
+            predicted_ids = output.argmax(dim=-1)
+            predicted_tokens = Dataloader.ids_to_tokens_batch(predicted_ids)
+            original_tokens = Dataloader.ids_to_tokens_batch(english)
+
+            all_predictions.append(predicted_tokens)
+            all_originals.append(original_tokens)
+
     # Calculate average loss and log after all batches completed
     avg_loss = total_loss / len(test_loader)
     writer.add_scalar("Loss/test", avg_loss, epoch_num + 1)
+
+    bleu = BLEUScore()
+    bleu_score = bleu(all_predictions, all_originals)
+    writer.add_scalar("BLEU/test", bleu_score, epoch_num + 1)
 
 
 def save_checkpoint(epoch_num, model, optimizer):

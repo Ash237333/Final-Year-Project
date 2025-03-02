@@ -62,7 +62,7 @@ def collate_fn(batch):
 
 
 def tokenize_dataset(dataset):
-    BPE_tokenizer = Tokenizer.from_file("BPE_Tokenizer.json")
+    BPE_tokenizer = load_BPE()
     def tokenize_func(example):
         gtext_tokenized = BPE_tokenizer.encode(example["translation"]["de"])
         etext_tokenized = BPE_tokenizer.encode(example["translation"]["en"])
@@ -76,6 +76,28 @@ def remove_long_data(ds):
     return ds.filter(lambda example: all(len(example[key]) <= MAX_LENGTH for key in ['input_ids', 'labels']))
 
 def decode_single_phrase(token_array):
-    BPE_tokenizer = Tokenizer.from_file("BPE_Tokenizer.json")
+    BPE_tokenizer = load_BPE()
     decoded_phrase = BPE_tokenizer.decode(token_array)
+    array = []
+    for i in token_array:
+        array.append(BPE_tokenizer.id_to_token(i))
+    print(array)
     return decoded_phrase
+
+def ids_to_tokens_batch(batch):
+    tokenizer = load_BPE()
+    translated_batch = []
+    for sequence in batch:
+        translated_sequence = []
+
+        for id in sequence:
+            token = tokenizer.id_to_token(id)
+            translated_sequence.append(token)
+
+        translated_batch.append(translated_sequence)
+    return translated_batch
+
+
+def load_BPE():
+    tokenizer = Tokenizer.from_file("BPE_Tokenizer.json")
+    return tokenizer

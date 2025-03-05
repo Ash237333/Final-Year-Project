@@ -8,7 +8,7 @@ from tokenizers.trainers import BpeTrainer
 from tokenizers.pre_tokenizers import Whitespace
 
 VOCAB_SIZE = 37000
-BATCH_SIZE = 8
+BATCH_SIZE = 32
 dataset_path = "wmt/wmt14"
 MAX_LENGTH = 256
 
@@ -64,8 +64,8 @@ def collate_fn(batch):
 def tokenize_dataset(dataset):
     BPE_tokenizer = load_BPE()
     def tokenize_func(example):
-        gtext_tokenized = BPE_tokenizer.encode(example["translation"]["de"])
-        etext_tokenized = BPE_tokenizer.encode(example["translation"]["en"])
+        gtext_tokenized = BPE_tokenizer.encode(example["translation"]["de"]).ids
+        etext_tokenized = BPE_tokenizer.encode(example["translation"]["en"]).ids
         return {"input_ids": gtext_tokenized, "labels": etext_tokenized}
 
     tokenized_dataset = dataset.map(tokenize_func, remove_columns=["translation"])

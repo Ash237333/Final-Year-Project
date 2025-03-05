@@ -95,6 +95,7 @@ def eval_model(epoch_num):
     all_predictions = []
     all_originals = []
 
+    tokeniser = Dataloader.load_BPE()
     model.eval()
     total_loss = 0
     with torch.no_grad():
@@ -114,8 +115,8 @@ def eval_model(epoch_num):
             total_loss += loss.item()
 
             predicted_ids = output.argmax(dim=-1)
-            predicted_tokens = Dataloader.ids_to_tokens_batch(predicted_ids)
-            original_tokens = Dataloader.ids_to_tokens_batch(english)
+            predicted_tokens = tokeniser.decode(predicted_ids)
+            original_tokens = tokeniser.decode(english)
 
             all_predictions.append(predicted_tokens)
             all_originals.append(original_tokens)
@@ -125,7 +126,7 @@ def eval_model(epoch_num):
     writer.add_scalar("Loss/test", avg_loss, epoch_num + 1)
 
     bleu = BLEUScore()
-    bleu_score = bleu(all_predictions, all_originals)
+    bleu_score = bleu(all_predictions, all_originals) * 100
     writer.add_scalar("BLEU/test", bleu_score, epoch_num + 1)
 
 

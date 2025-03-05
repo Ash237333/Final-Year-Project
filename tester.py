@@ -19,8 +19,8 @@ model.eval()
 
 #Prepare the input phrase
 input_phrase = "Du bist geschmeidig, bringst mir nur in Trance"
-BPE_tokenizer = PreTrainedTokenizerFast(tokenizer_file="BPE_Tokenizer.json")
-input_tensor = BPE_tokenizer.encode(input_phrase)
+BPE_tokenizer = Dataloader.load_BPE()
+input_tensor = BPE_tokenizer.encode(input_phrase).ids
 input_tensor = torch.tensor(input_tensor).unsqueeze(0).to(device)
 
 target = torch.tensor([[]]).long().to(device) # Start with BOS token (shape: (1, batch_size))

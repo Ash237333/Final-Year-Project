@@ -1,7 +1,6 @@
 #Imports
 from Model import Transformer
 import torch
-from transformers import PreTrainedTokenizerFast
 import torch.nn as nn
 import Dataloader
 
@@ -10,7 +9,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 #Load up the model
-checkpoint = torch.load("./saves/run14/epoch_5.pth")
+checkpoint = torch.load("E:/Downloaded_Output_Files_From_Barkla/saves/run19-03/epoch_1.pth")
 model = Transformer()
 model = nn.DataParallel(model)
 model.load_state_dict(checkpoint['model_state_dict'])
@@ -18,9 +17,10 @@ model.to(device)
 model.eval()
 
 #Prepare the input phrase
-input_phrase = "Du bist geschmeidig, bringst mir nur in Trance"
+input_phrase = "Ich weiß, es ist so random"
 BPE_tokenizer = Dataloader.load_BPE()
 input_tensor = BPE_tokenizer.encode(input_phrase).ids
+print(BPE_tokenizer.decode(input_tensor))
 input_tensor = torch.tensor(input_tensor).unsqueeze(0).to(device)
 
 target = torch.tensor([[]]).long().to(device) # Start with BOS token (shape: (1, batch_size))
@@ -44,5 +44,3 @@ for _ in range(70):
 phrase = Dataloader.decode_single_phrase(output_tokens)
 print(phrase)
 print(output_tokens)
-#for char in phrase:
-#    print(char)

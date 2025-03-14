@@ -2,10 +2,10 @@ import torch
 from datasets import load_dataset
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
-from tokenizers import Tokenizer
+from tokenizers import Tokenizer, decoders
 from tokenizers.models import BPE
 from tokenizers.trainers import BpeTrainer
-from tokenizers.pre_tokenizers import Whitespace
+from tokenizers.pre_tokenizers import ByteLevel
 
 VOCAB_SIZE = 37000
 BATCH_SIZE = 32
@@ -22,7 +22,7 @@ def train_tokenizer():
 
     BPE_tokenizer = Tokenizer(BPE(unk_token="[UNK]"))
 
-    BPE_tokenizer.pre_tokenizer = Whitespace()
+    BPE_tokenizer.pre_tokenizer = ByteLevel()
 
     BPE_trainer = BpeTrainer(vocab_size=VOCAB_SIZE, show_progress=True, special_tokens=["[PAD]", "[UNK]", "[BOS]", "[EOS]"])
     BPE_tokenizer.train_from_iterator(dataset_iterator(ds),BPE_trainer, length = len(ds)*2)

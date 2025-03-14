@@ -115,11 +115,13 @@ def eval_model(epoch_num):
             total_loss += loss.item()
 
             predicted_ids = output.argmax(dim=-1)
-            predicted_tokens = tokeniser.decode(predicted_ids)
-            original_tokens = tokeniser.decode(english)
+            for ids in predicted_ids:
+                predicted_tokens = tokeniser.decode(ids.tolist())
+                all_predictions.append(predicted_tokens)
 
-            all_predictions.append(predicted_tokens)
-            all_originals.append(original_tokens)
+            for ids in english:
+                original_tokens = tokeniser.decode(ids.tolist())
+                all_originals.append(original_tokens)
 
     # Calculate average loss and log after all batches completed
     avg_loss = total_loss / len(test_loader)

@@ -6,11 +6,11 @@ from tokenizers import Tokenizer, decoders
 from tokenizers.models import BPE
 from tokenizers.trainers import BpeTrainer
 from tokenizers.pre_tokenizers import ByteLevel
+import Batch_Sampler
 
 VOCAB_SIZE = 37000
-BATCH_SIZE = 32
 dataset_path = "wmt/wmt14"
-MAX_LENGTH = 256
+TARGET_TOTAL_TOKENS = 11000
 
 
 def train_tokenizer():
@@ -36,12 +36,14 @@ def create_dataloader():
     test_dataset = load_dataset(dataset_path,"de-en", split="test")
     test_dataset = tokenize_dataset(test_dataset)
     test_dataset = remove_long_data(test_dataset)
-    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=True, collate_fn=collate_fn)
+    test_sampler = Batch_Sampler.Custom_Sampler(test_dataset, TARGET_TOTAL_TOKENS)
+    test_loader = DataLoader(test_dataset, batch_sampler=test_sampler, collate_fn=collate_fn)
 
     train_dataset = load_dataset(dataset_path, "de-en", split="train")
     train_dataset = tokenize_dataset(train_dataset)
     train_dataset = remove_long_data(train_dataset)
-    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=False, collate_fn=collate_fn)
+    train_sampler = Batch_Sampler.Custom_Sampler(train_dataset, TARGET_TOTAL_TOKENS)
+    train_loader = DataLoader(train_dataset, batch_sampler=train_sampler, collate_fn=collate_fn)
 
     return train_loader, test_loader
 
@@ -71,10 +73,6 @@ def tokenize_dataset(dataset):
     tokenized_dataset = dataset.map(tokenize_func, remove_columns=["translation"])
     return tokenized_dataset
 
-
-def remove_long_data(ds):
-    return ds.filter(lambda example: all(len(example[key]) <= MAX_LENGTH for key in ['input_ids', 'labels']))
-
 def decode_single_phrase(token_array):
     BPE_tokenizer = load_BPE()
     decoded_phrase = BPE_tokenizer.decode(token_array)
@@ -96,6 +94,9 @@ def ids_to_tokens_batch(batch):
 
         translated_batch.append(translated_sequence)
     return translated_batch
+
+def remove_long_data(ds):
+    return ds.filter(lambda example: all(len(example[key]) <= 8000 for key in ['input_ids', 'labels']))
 
 
 def load_BPE():

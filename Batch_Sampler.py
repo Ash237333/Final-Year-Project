@@ -17,7 +17,16 @@ class Custom_Sampler(Sampler):
 
         self.sorted_indexes = np.argsort(self.lengths)[::-1]
 
+        self._get_batches()
+
     def __iter__(self):
+        # Randomly shuffles order of the batches each epoch
+        np.random.shuffle(self.batches)
+        for batch in self.batches:
+            yield batch
+
+
+    def _get_batches(self):
         curr_batch = []
         curr_batch_seq_length = 0
 
@@ -28,28 +37,12 @@ class Custom_Sampler(Sampler):
             if curr_batch_seq_length * (len(curr_batch) + 1) <= self.target_total_tokens:
                 curr_batch.append(int(idx))
             else:
-                yield curr_batch
+                self.batches.append(curr_batch)
                 curr_batch = [int(idx)]
                 curr_batch_seq_length = length
         if curr_batch:
-            yield curr_batch
+            self.batches.append(curr_batch)
 
 
     def __len__(self):
-        num_batches = 0
-        curr_batch = []
-        curr_batch_seq_length = 0
-
-        for idx in self.sorted_indexes:
-            length = self.lengths[idx]
-            if length > curr_batch_seq_length:
-                curr_batch_seq_length = length
-            if curr_batch_seq_length * (len(curr_batch) + 1) <= self.target_total_tokens:
-                curr_batch.append(int(idx))
-            else:
-                num_batches += 1
-                curr_batch = [int(idx)]
-                curr_batch_seq_length = length
-        if curr_batch:
-            num_batches += 1
-        return num_batches
+        return len(self.batches)

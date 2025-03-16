@@ -8,6 +8,7 @@ class Custom_Sampler(Sampler):
         self.lengths = []
         self.target_total_tokens = target_total_tokens
         self.batches = []
+        self.sorted_indexes = []
 
         for i in data_source:
             label_length = len(i["labels"])
@@ -15,18 +16,25 @@ class Custom_Sampler(Sampler):
             length = max(label_length, input_length)
             self.lengths.append(length)
 
-        self.sorted_indexes = np.argsort(self.lengths)[::-1]
-
+        #This call is not used but is needed to give correct __len__ value
         self._get_batches()
 
     def __iter__(self):
+        self._get_batches()
         # Randomly shuffles order of the batches each epoch
         np.random.shuffle(self.batches)
         for batch in self.batches:
             yield batch
 
+    def calculate_sorted_indexes(self):
+        #Adds a small random number to the lengths, used to randomise order when length is the same
+        #Simulates a shuffle without compromising the memory efficiency of dynamic length-based batching
+        random_tie_breaking_noise = np.random.rand(len(self.lengths)) * 0.1
+        self.sorted_indexes = np.argsort(self.lengths + random_tie_breaking_noise)[::-1]
 
     def _get_batches(self):
+        self.calculate_sorted_indexes()
+        self.batches = []
         curr_batch = []
         curr_batch_seq_length = 0
 

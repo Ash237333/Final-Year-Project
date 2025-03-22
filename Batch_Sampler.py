@@ -30,7 +30,7 @@ class Custom_Sampler(Sampler):
         #Adds a small random number to the lengths, used to randomise order when length is the same
         #Simulates a shuffle without compromising the memory efficiency of dynamic length-based batching
         random_tie_breaking_noise = np.random.rand(len(self.lengths)) * 0.1
-        self.sorted_indexes = np.argsort(self.lengths + random_tie_breaking_noise)[::-1]
+        self.sorted_indexes = np.argsort(self.lengths + random_tie_breaking_noise)
 
     def _get_batches(self):
         self.calculate_sorted_indexes()

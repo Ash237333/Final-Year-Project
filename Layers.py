@@ -5,6 +5,7 @@ EMBEDDING_DIMENSION = 512
 DROPOUT_PROB = 0.1
 FFN_INNER_SIZE = 2048
 
+
 def positional_encoder(input):
     """
     Defines an encoder for adding positional information to vector embeddings

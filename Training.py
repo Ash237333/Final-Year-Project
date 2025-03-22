@@ -11,7 +11,7 @@ import os
 import torch.nn as nn
 from torchmetrics.text.bleu import BLEUScore
 
-EPOCHS = 1
+EPOCHS = 10
 
 SAVE_DIR = "./saves/runtest"
 os.makedirs(SAVE_DIR)
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     writer = SummaryWriter()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(device)
-    loss_fn = CrossEntropyLoss(ignore_index=0)
+    loss_fn = CrossEntropyLoss(ignore_index=0, label_smoothing=0.1)
     train_loader, test_loader = Dataloader.create_dataloader()
     model = Transformer()
     model = nn.DataParallel(model)

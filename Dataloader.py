@@ -10,7 +10,7 @@ import Batch_Sampler
 
 VOCAB_SIZE = 37000
 dataset_path = "wmt/wmt14"
-TARGET_TOTAL_TOKENS = 11000
+TARGET_TOTAL_TOKENS = 9000
 
 
 def train_tokenizer():
@@ -31,6 +31,7 @@ def train_tokenizer():
     BPE_tokenizer.eos_token = "[EOS]"
     BPE_tokenizer.unk_token = "[UNK]"
     BPE_tokenizer.save("BPE_Tokenizer.json")
+
 
 def create_dataloader():
     test_dataset = load_dataset(dataset_path,"de-en", split="test")
@@ -73,6 +74,7 @@ def tokenize_dataset(dataset):
     tokenized_dataset = dataset.map(tokenize_func, remove_columns=["translation"])
     return tokenized_dataset
 
+
 def decode_single_phrase(token_array):
     BPE_tokenizer = load_BPE()
     decoded_phrase = BPE_tokenizer.decode(token_array)
@@ -82,18 +84,6 @@ def decode_single_phrase(token_array):
     print(array)
     return decoded_phrase
 
-def ids_to_tokens_batch(batch):
-    tokenizer = load_BPE()
-    translated_batch = []
-    for sequence in batch:
-        translated_sequence = []
-
-        for id in sequence:
-            token = tokenizer.id_to_token(id)
-            translated_sequence.append(token)
-
-        translated_batch.append(translated_sequence)
-    return translated_batch
 
 def remove_long_data(ds):
     return ds.filter(lambda example: all(len(example[key]) <= 8000 for key in ['input_ids', 'labels']))

@@ -2,7 +2,7 @@ import torch
 from datasets import load_dataset
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
-from tokenizers import Tokenizer, decoders
+from tokenizers import Tokenizer
 from tokenizers.models import BPE
 from tokenizers.trainers import BpeTrainer
 from tokenizers.pre_tokenizers import ByteLevel
@@ -34,13 +34,13 @@ def train_tokenizer():
 
 
 def create_dataloader():
-    test_dataset = load_dataset(dataset_path,"de-en", split="test")
+    test_dataset = load_dataset(dataset_path,"de-en", split="test", download_mode="force_redownload")
     test_dataset = tokenize_dataset(test_dataset)
     test_dataset = remove_long_data(test_dataset)
     test_sampler = Batch_Sampler.Custom_Sampler(test_dataset, TARGET_TOTAL_TOKENS)
     test_loader = DataLoader(test_dataset, batch_sampler=test_sampler, collate_fn=collate_fn)
 
-    train_dataset = load_dataset(dataset_path, "de-en", split="train")
+    train_dataset = load_dataset(dataset_path, "de-en", split="train", download_mode="force_redownload")
     train_dataset = tokenize_dataset(train_dataset)
     train_dataset = remove_long_data(train_dataset)
     train_sampler = Batch_Sampler.Custom_Sampler(train_dataset, TARGET_TOTAL_TOKENS)

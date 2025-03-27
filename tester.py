@@ -9,7 +9,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 #Load up the model
-checkpoint = torch.load("E:/Downloaded_Output_Files_From_Barkla/saves/run27/epoch_2.pth")
+checkpoint = torch.load("E:/Downloaded_Output_Files_From_Barkla/saves/run26/epoch_10.pth")
 model = Transformer()
 model = nn.DataParallel(model)
 model.load_state_dict(checkpoint['model_state_dict'])
@@ -17,7 +17,7 @@ model.to(device)
 model.eval()
 
 #Prepare the input phrase
-input_phrase = "ich mag du."
+input_phrase = "Eines Tages wollt ich in den Club fahr'n."
 BPE_tokenizer = Dataloader.load_BPE()
 input_tensor = BPE_tokenizer.encode(input_phrase).ids
 print(BPE_tokenizer.decode(input_tensor))

@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 #Setup torch, Load in model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
-checkpoint = torch.load("./saves/run14/epoch_4.pth")
+checkpoint = torch.load("E:/Downloaded_Output_Files_From_Barkla/saves/run27/epoch_10.pth")
 model = Transformer()
 model = nn.DataParallel(model)
 model.load_state_dict(checkpoint['model_state_dict'])
@@ -31,6 +31,8 @@ app.add_middleware(
 @app.get("/translation/{german_text}")
 async def translate(german_text: str):
     BPE_tokenizer = PreTrainedTokenizerFast(tokenizer_file="BPE_Tokenizer.json")
+    if german_text[-1]  != ".":
+        german_text = german_text + "."
     input_tensor = BPE_tokenizer.encode(german_text)
     input_tensor = torch.tensor(input_tensor).unsqueeze(0).to(device)
 

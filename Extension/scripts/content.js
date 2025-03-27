@@ -12,17 +12,26 @@ function startObserver(){
 }
 
 function newCaptions(mutations, observer){
+    let caption = "";
     mutations.forEach(mutation => {
         mutation.addedNodes.forEach(node => {
-            if (node.nodeType == Node.TEXT_NODE){
-                console.log(node.textContent);  
-                translateCaption(node.textContent);
+            if (node.nodeType == Node.TEXT_NODE){  
+                caption += " " + node.textContent
             }
         })
     });
+    if (caption){
+        translateCaption(caption);
+    }
 }
 
 async function translateCaption(caption){
+    let addedFullStop = false
+    if (caption.charAt(caption.length - 1) !== "."){
+        caption += "."
+        addedFullStop = true
+    }
+    console.log(`To be translated: ${caption}`)
     try {
         let startTime = performance.now(); // Start timing
 
@@ -35,6 +44,10 @@ async function translateCaption(caption){
         }
         
         let translatedCaption = await response.json();
+
+        if (addedFullStop){
+            caption = caption.slice(0, -1)
+        }
         
         // content.js
         chrome.runtime.sendMessage({
